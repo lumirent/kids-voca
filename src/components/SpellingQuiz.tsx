@@ -1,5 +1,5 @@
-import { CheckCircle2, XCircle } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { CheckCircle2, Volume2, XCircle } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import type { Word } from '../types';
@@ -15,6 +15,18 @@ const SpellingQuiz = ({ wordItem, onAnswer }: SpellingQuizProps) => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const playWordSound = useCallback(() => {
+    if ('speechSynthesis' in window) {
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(wordItem.word);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.9;
+      window.speechSynthesis.speak(utterance);
+    }
+  }, [wordItem.word]);
 
   useEffect(() => {
     if (!wordItem) return;
@@ -93,13 +105,21 @@ const SpellingQuiz = ({ wordItem, onAnswer }: SpellingQuizProps) => {
         이 단어의 스펠링을 완성해볼까요?
       </h2>
 
-      <div className="w-48 h-48 sm:w-64 sm:h-64 mb-8 bg-slate-50 rounded-2xl flex items-center justify-center p-4 border-2 shadow-inner">
+      <div className="w-48 h-48 sm:w-64 sm:h-64 mb-6 bg-slate-50 rounded-2xl flex items-center justify-center p-4 border-2 shadow-inner relative group">
         <img
           src={wordItem.imageUrl}
           alt="Spelling target"
           draggable="false"
           className="w-full h-full object-contain drop-shadow-sm"
         />
+        <button
+          type="button"
+          onClick={playWordSound}
+          className="absolute -bottom-4 -right-4 p-4 bg-white rounded-full shadow-lg border-2 border-primary text-primary hover:scale-110 active:scale-95 transition-transform z-10"
+          aria-label="발음 듣기"
+        >
+          <Volume2 className="w-6 h-6 sm:w-8 sm:h-8" />
+        </button>
       </div>
 
       <div className="mb-8 text-center">
