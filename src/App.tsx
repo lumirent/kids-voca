@@ -10,6 +10,7 @@ import TopBar from './components/TopBar';
 import { useIncorrectWords } from './hooks/useIncorrectWords'; // New import
 import { useLearningStats } from './hooks/useLearningStats';
 import { useSpeechRate } from './hooks/useSpeechRate';
+import { useStudyProgress } from './hooks/useStudyProgress';
 import { useVocabulary } from './hooks/useVocabulary';
 import type { AppMode, Word } from './types';
 
@@ -26,13 +27,26 @@ function App() {
   const { stats, recordAnswer, resetStats } = useLearningStats(mode);
   const { incorrectWords, addIncorrectWord, removeIncorrectWord } =
     useIncorrectWords();
+  const { saveProgress, getProgress, clearProgress } = useStudyProgress();
 
-  // Initialize currentDeck once allWords is loaded
+  // Initialize currentDeck once allWords is loaded (only if no deck exists)
   useEffect(() => {
-    if (allWords.length > 0 && currentDeck.length === 0) {
+    if (allWords.length > 0 && currentDeck.length === 0 && mode === 'home') {
       setCurrentDeck([...allWords].sort(() => 0.5 - Math.random()));
     }
-  }, [allWords, currentDeck.length]);
+  }, [allWords, currentDeck.length, mode]);
+
+  // Persist progress whenever it changes
+  useEffect(() => {
+    if (['learn', 'quiz', 'spelling-quiz', 'review'].includes(mode)) {
+      saveProgress(
+        mode,
+        currentDeck.map((w) => w.id),
+        currentIndex,
+        quizScore,
+      );
+    }
+  }, [mode, currentIndex, currentDeck, quizScore, saveProgress]);
 
   if (error) {
     alert(
@@ -40,37 +54,56 @@ function App() {
     );
   }
 
+  // Helper to start or resume a mode
+  const startMode = (targetMode: AppMode, baseWords: Word[]) => {
+    if (baseWords.length === 0) {
+      if (targetMode === 'review') return;
+      return alert('단어 데이터가 없습니다.');
+    }
+
+    const saved = getProgress(targetMode);
+    if (
+      saved &&
+      saved.deckIds.length > 0 &&
+      saved.currentIndex < saved.deckIds.length
+    ) {
+      // Try to reconstruct the deck from IDs. We must ensure all words still exist.
+      const reconstructedDeck = saved.deckIds
+        .map((id) => allWords.find((w) => w.id === id))
+        .filter(Boolean) as Word[];
+
+      // If we could reconstruct the full deck, resume
+      if (reconstructedDeck.length === saved.deckIds.length) {
+        setCurrentDeck(reconstructedDeck);
+        setCurrentIndex(saved.currentIndex);
+        setQuizScore(saved.score || 0);
+        setMode(targetMode);
+        return;
+      }
+    }
+
+    // Otherwise, start fresh
+    setCurrentDeck([...baseWords].sort(() => 0.5 - Math.random()));
+    setCurrentIndex(0);
+    setQuizScore(0);
+    setMode(targetMode);
+  };
+
   // --- Navigation & State Reset ---
   const startLearnMode = () => {
-    if (allWords.length === 0) return alert('단어 데이터가 없습니다.');
-    setCurrentDeck([...allWords].sort(() => 0.5 - Math.random()));
-    setCurrentIndex(0);
-    setMode('learn');
+    startMode('learn', allWords);
   };
 
   const startQuizMode = () => {
-    if (allWords.length === 0) return alert('단어 데이터가 없습니다.');
-    setCurrentDeck([...allWords].sort(() => 0.5 - Math.random()));
-    setCurrentIndex(0);
-
-    setQuizScore(0);
-    setMode('quiz');
+    startMode('quiz', allWords);
   };
 
   const startSpellingQuizMode = () => {
-    if (allWords.length === 0) return alert('단어 데이터가 없습니다.');
-    setCurrentDeck([...allWords].sort(() => 0.5 - Math.random()));
-    setCurrentIndex(0);
-
-    setQuizScore(0);
-    setMode('spelling-quiz');
+    startMode('spelling-quiz', allWords);
   };
 
   const startReviewMode = () => {
-    if (incorrectWords.length === 0) return;
-    setCurrentDeck([...incorrectWords].sort(() => 0.5 - Math.random()));
-    setCurrentIndex(0);
-    setMode('review');
+    startMode('review', incorrectWords);
   };
 
   const startStatsMode = () => {
@@ -85,6 +118,11 @@ function App() {
   const handleNext = () => {
     if (currentIndex < currentDeck.length - 1) {
       setCurrentIndex(currentIndex + 1);
+    } else {
+      // If we reach the end in learn or review mode, we can consider it finished
+      if (mode === 'learn' || mode === 'review') {
+        clearProgress(mode);
+      }
     }
   };
 
@@ -99,6 +137,13 @@ function App() {
     setCurrentDeck(shuffled);
     setCurrentIndex(0);
     setShuffleTrigger((prev) => prev + 1);
+    // Shuffle reset progress for the current mode
+    saveProgress(
+      mode,
+      shuffled.map((w) => w.id),
+      0,
+      mode === 'quiz' || mode === 'spelling-quiz' ? 0 : quizScore,
+    );
   };
 
   // --- Quiz Handling ---
@@ -117,7 +162,9 @@ function App() {
       if (currentIndex < currentDeck.length - 1) {
         setCurrentIndex(currentIndex + 1);
       } else {
+        const finishedMode = mode;
         setMode('quiz-result');
+        clearProgress(finishedMode);
       }
     }, 1000);
   };
