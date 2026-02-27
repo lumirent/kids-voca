@@ -1,4 +1,4 @@
-import { CheckCircle2, Volume2, XCircle } from 'lucide-react';
+import { Volume2 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -10,17 +10,15 @@ interface SpellingQuizProps {
 }
 
 const SpellingQuiz = ({ wordItem, onAnswer }: SpellingQuizProps) => {
-  const [userInput, setUserInput] = useState('');
-  const [maskedWord, setMaskedWord] = useState('');
+  const [inputValues, setInputValues] = useState<Record<number, string>>({});
+  const [hiddenIndices, setHiddenIndices] = useState<number[]>([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRefs = useRef<Record<number, HTMLInputElement | null>>({});
 
   const playWordSound = useCallback(() => {
     if ('speechSynthesis' in window) {
-      // Cancel any ongoing speech
       window.speechSynthesis.cancel();
-
       const utterance = new SpeechSynthesisUtterance(wordItem.word);
       utterance.lang = 'en-US';
       utterance.rate = 0.9;
@@ -31,7 +29,6 @@ const SpellingQuiz = ({ wordItem, onAnswer }: SpellingQuizProps) => {
   useEffect(() => {
     if (!wordItem) return;
 
-    // Generate masked word
     const word = wordItem.word;
     const chars = word.split('');
     const maskableIndices = chars
@@ -39,7 +36,6 @@ const SpellingQuiz = ({ wordItem, onAnswer }: SpellingQuizProps) => {
       .filter((i) => i !== -1);
 
     if (maskableIndices.length > 0) {
-      // Hide approximately 40% of letters, at least 1, at most length - 1
       const numToHide = Math.max(
         1,
         Math.min(
@@ -48,28 +44,33 @@ const SpellingQuiz = ({ wordItem, onAnswer }: SpellingQuizProps) => {
         ),
       );
 
-      const hiddenIndices = [...maskableIndices]
+      const hidden = [...maskableIndices]
         .sort(() => 0.5 - Math.random())
-        .slice(0, numToHide);
+        .slice(0, numToHide)
+        .sort((a, b) => a - b);
 
-      const masked = chars
-        .map((c, i) => (hiddenIndices.includes(i) ? '_' : c))
-        .join(' '); // Add spaces for better readability
-      setMaskedWord(masked);
+      setHiddenIndices(hidden);
+      const initialValues: Record<number, string> = {};
+      for (const idx of hidden) {
+        initialValues[idx] = '';
+      }
+      setInputValues(initialValues);
     } else {
-      setMaskedWord(word);
+      setHiddenIndices([]);
+      setInputValues({});
     }
 
-    // Reset state
-    setUserInput('');
     setIsSubmitted(false);
     setIsCorrect(null);
-
-    // Focus input
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 100);
   }, [wordItem]);
+
+  // Separate effect for focusing to ensure hiddenIndices is updated
+  useEffect(() => {
+    if (hiddenIndices.length > 0 && !isSubmitted) {
+      const firstHiddenIdx = hiddenIndices[0];
+      inputRefs.current[firstHiddenIdx]?.focus();
+    }
+  }, [hiddenIndices, isSubmitted]);
 
   const playFeedbackSound = (correct: boolean) => {
     if ('speechSynthesis' in window) {
@@ -84,10 +85,22 @@ const SpellingQuiz = ({ wordItem, onAnswer }: SpellingQuizProps) => {
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (isSubmitted || !userInput.trim()) return;
+    if (isSubmitted) return;
 
-    const correct =
-      userInput.trim().toLowerCase() === wordItem.word.toLowerCase();
+    // Check if all blanks are filled
+    const allFilled = hiddenIndices.every(
+      (idx) => inputValues[idx]?.trim().length > 0,
+    );
+    if (!allFilled) return;
+
+    const fullAttempt = wordItem.word
+      .split('')
+      .map((char, idx) =>
+        hiddenIndices.includes(idx) ? inputValues[idx] || '' : char,
+      )
+      .join('');
+
+    const correct = fullAttempt.toLowerCase() === wordItem.word.toLowerCase();
     setIsSubmitted(true);
     setIsCorrect(correct);
     playFeedbackSound(correct);
@@ -95,6 +108,40 @@ const SpellingQuiz = ({ wordItem, onAnswer }: SpellingQuizProps) => {
     setTimeout(() => {
       onAnswer(correct, wordItem);
     }, 2000);
+  };
+
+  const handleInputChange = (index: number, value: string) => {
+    if (isSubmitted) return;
+
+    // Only allow single character
+    const char = value.slice(-1).toLowerCase();
+    if (char && !/^[a-z]$/.test(char)) return;
+
+    const newInputValues = { ...inputValues, [index]: char };
+    setInputValues(newInputValues);
+
+    if (char) {
+      // Move to next hidden input
+      const nextIdx = hiddenIndices.find((idx) => idx > index);
+      if (nextIdx !== undefined) {
+        inputRefs.current[nextIdx]?.focus();
+      }
+    }
+  };
+
+  const handleKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
+    if (e.key === 'Backspace' && !inputValues[index] && !isSubmitted) {
+      // Move to previous hidden input
+      const prevIdx = [...hiddenIndices].reverse().find((idx) => idx < index);
+      if (prevIdx !== undefined) {
+        inputRefs.current[prevIdx]?.focus();
+      }
+    } else if (e.key === 'Enter' && !isSubmitted) {
+      handleSubmit();
+    }
   };
 
   if (!wordItem) return null;
@@ -122,46 +169,69 @@ const SpellingQuiz = ({ wordItem, onAnswer }: SpellingQuizProps) => {
         </button>
       </div>
 
+      <div className="mb-8 text-center flex flex-wrap justify-center items-center gap-y-6">
+        {wordItem.word.split(' ').map((wordPart, wordIdx, wordsArr) => {
+          const previousWordsLength = wordsArr
+            .slice(0, wordIdx)
+            .join(' ').length;
+          const wordStartIdx = wordIdx === 0 ? 0 : previousWordsLength + 1;
+
+          return (
+            <div
+              key={`word-${wordIdx}`}
+              className="flex gap-2 sm:gap-3 items-center mx-2 sm:mx-4"
+            >
+              {wordPart.split('').map((char, charIdx) => {
+                const globalIdx = wordStartIdx + charIdx;
+                const isHidden = hiddenIndices.includes(globalIdx);
+                const key = `char-${wordItem.id}-${globalIdx}`;
+
+                if (isHidden) {
+                  return (
+                    <input
+                      key={key}
+                      ref={(el) => {
+                        inputRefs.current[globalIdx] = el;
+                      }}
+                      type="text"
+                      value={inputValues[globalIdx] || ''}
+                      onChange={(e) =>
+                        handleInputChange(globalIdx, e.target.value)
+                      }
+                      onKeyDown={(e) => handleKeyDown(globalIdx, e)}
+                      disabled={isSubmitted}
+                      className={`w-10 h-12 sm:w-14 sm:h-16 text-3xl sm:text-4xl text-center font-mono font-bold rounded-xl border-b-4 focus:outline-none transition-all ${
+                        isSubmitted
+                          ? isCorrect
+                            ? 'border-green-500 text-green-600 bg-green-50'
+                            : 'border-red-500 text-red-600 bg-red-50'
+                          : 'border-slate-300 focus:border-primary focus:bg-slate-50'
+                      }`}
+                      maxLength={1}
+                    />
+                  );
+                }
+                return (
+                  <span
+                    key={key}
+                    className="text-4xl sm:text-5xl font-mono font-bold text-primary"
+                  >
+                    {char}
+                  </span>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
+
       <div className="mb-8 text-center">
-        <p className="text-4xl sm:text-5xl font-mono font-bold tracking-widest text-primary mb-2">
-          {maskedWord}
-        </p>
         <p className="text-xl text-muted-foreground">{wordItem.meaning}</p>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="w-full flex flex-col items-center gap-4"
-      >
-        <div className="relative w-full max-w-sm">
-          <input
-            ref={inputRef}
-            type="text"
-            value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
-            disabled={isSubmitted}
-            placeholder="여기에 스펠링을 입력하세요"
-            className={`w-full h-16 text-2xl text-center rounded-2xl border-4 focus:outline-none transition-all ${
-              isSubmitted
-                ? isCorrect
-                  ? 'border-green-500 bg-green-50 text-green-700'
-                  : 'border-red-500 bg-red-50 text-red-700'
-                : 'border-slate-200 focus:border-primary'
-            }`}
-          />
-          {isSubmitted && (
-            <div className="absolute right-4 top-1/2 -translate-y-1/2">
-              {isCorrect ? (
-                <CheckCircle2 className="w-8 h-8 text-green-500 animate-bounce" />
-              ) : (
-                <XCircle className="w-8 h-8 text-red-500 animate-pulse" />
-              )}
-            </div>
-          )}
-        </div>
-
+      <div className="w-full flex flex-col items-center gap-4">
         {isSubmitted && !isCorrect && (
-          <div className="text-xl font-bold text-red-600 animate-in fade-in slide-in-from-top-2">
+          <div className="text-xl font-bold text-red-600 animate-in fade-in slide-in-from-top-2 mb-2">
             정답은:{' '}
             <span className="text-2xl underline decoration-double">
               {wordItem.word}
@@ -171,9 +241,12 @@ const SpellingQuiz = ({ wordItem, onAnswer }: SpellingQuizProps) => {
         )}
 
         <Button
-          type="submit"
+          onClick={() => handleSubmit()}
           size="lg"
-          disabled={isSubmitted || !userInput.trim()}
+          disabled={
+            isSubmitted ||
+            !hiddenIndices.every((idx) => inputValues[idx]?.trim().length > 0)
+          }
           className="w-full max-w-sm h-14 text-xl rounded-2xl shadow-md transition-all active:scale-95"
         >
           {isSubmitted
@@ -182,7 +255,7 @@ const SpellingQuiz = ({ wordItem, onAnswer }: SpellingQuizProps) => {
               : '아쉬워요!'
             : '정답 확인'}
         </Button>
-      </form>
+      </div>
     </Card>
   );
 };
