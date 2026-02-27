@@ -28,7 +28,7 @@ function App() {
   // Initialize currentDeck once allWords is loaded
   useEffect(() => {
     if (allWords.length > 0 && currentDeck.length === 0) {
-      setCurrentDeck(allWords);
+      setCurrentDeck([...allWords].sort(() => 0.5 - Math.random()));
     }
   }, [allWords, currentDeck.length]);
 
@@ -41,7 +41,7 @@ function App() {
   // --- Navigation & State Reset ---
   const startLearnMode = () => {
     if (allWords.length === 0) return alert('단어 데이터가 없습니다.');
-    setCurrentDeck([...allWords]);
+    setCurrentDeck([...allWords].sort(() => 0.5 - Math.random()));
     setCurrentIndex(0);
     setMode('learn');
   };
@@ -66,7 +66,7 @@ function App() {
 
   const startReviewMode = () => {
     if (incorrectWords.length === 0) return;
-    setCurrentDeck([...incorrectWords]);
+    setCurrentDeck([...incorrectWords].sort(() => 0.5 - Math.random()));
     setCurrentIndex(0);
     setMode('review');
   };
