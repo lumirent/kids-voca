@@ -4,6 +4,7 @@ import Flashcard from './components/Flashcard';
 import Home from './components/Home';
 import Quiz from './components/Quiz';
 import QuizResult from './components/QuizResult';
+import SpellingQuiz from './components/SpellingQuiz';
 import Statistics from './components/Statistics';
 import TopBar from './components/TopBar';
 import { useIncorrectWords } from './hooks/useIncorrectWords'; // New import
@@ -52,6 +53,15 @@ function App() {
 
     setQuizScore(0);
     setMode('quiz');
+  };
+
+  const startSpellingQuizMode = () => {
+    if (allWords.length === 0) return alert('단어 데이터가 없습니다.');
+    setCurrentDeck([...allWords].sort(() => 0.5 - Math.random()));
+    setCurrentIndex(0);
+
+    setQuizScore(0);
+    setMode('spelling-quiz');
   };
 
   const startReviewMode = () => {
@@ -126,6 +136,7 @@ function App() {
         <Home
           onStartLearn={startLearnMode}
           onStartQuiz={startQuizMode}
+          onStartSpellingQuiz={startSpellingQuizMode}
           onStartReview={startReviewMode}
           onStartStats={startStatsMode} // New prop
           wrongAnswersCount={incorrectWords.length}
@@ -174,6 +185,23 @@ function App() {
             <Quiz
               wordItem={currentDeck[currentIndex]}
               allWords={allWords}
+              onAnswer={handleQuizAnswer}
+            />
+          </main>
+        </div>
+      )}
+
+      {!isLoading && mode === 'spelling-quiz' && (
+        <div className="flex flex-col min-h-screen">
+          <TopBar title="스펠링 퀴즈" onHome={goHome} />
+          <main className="flex-1 flex flex-col items-center p-4 sm:p-6 w-full max-w-3xl mx-auto">
+            <div className="w-full flex justify-between items-center mb-6 text-sm font-medium text-muted-foreground">
+              <span>
+                문제 {currentIndex + 1} / {currentDeck.length}
+              </span>
+            </div>
+            <SpellingQuiz
+              wordItem={currentDeck[currentIndex]}
               onAnswer={handleQuizAnswer}
             />
           </main>

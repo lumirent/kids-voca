@@ -61,8 +61,10 @@ export const useLearningStats = (currentMode: string) => {
 
   // Effect to manage session timing based on mode changes
   useEffect(() => {
-    const isStudyMode = ['learn', 'quiz', 'review'].includes(currentMode);
-    const wasStudyMode = ['learn', 'quiz', 'review'].includes(
+    const isStudyMode = ['learn', 'quiz', 'review', 'spelling-quiz'].includes(
+      currentMode,
+    );
+    const wasStudyMode = ['learn', 'quiz', 'review', 'spelling-quiz'].includes(
       previousModeRef.current,
     );
 

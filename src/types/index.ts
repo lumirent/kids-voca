@@ -9,6 +9,7 @@ export type AppMode =
   | 'home'
   | 'learn'
   | 'quiz'
+  | 'spelling-quiz'
   | 'review'
   | 'quiz-result'
   | 'stats';

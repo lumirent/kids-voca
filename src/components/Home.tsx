@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 interface HomeProps {
   onStartLearn: () => void;
   onStartQuiz: () => void;
+  onStartSpellingQuiz: () => void;
   onStartReview: () => void;
   onStartStats: () => void; // New prop
   wrongAnswersCount: number;
@@ -18,6 +19,7 @@ interface HomeProps {
 const Home = ({
   onStartLearn,
   onStartQuiz,
+  onStartSpellingQuiz,
   onStartReview,
   onStartStats, // New prop
   wrongAnswersCount,
@@ -42,14 +44,24 @@ const Home = ({
         >
           <BookOpen className="mr-2 h-6 w-6" /> 단어 학습하기
         </Button>
-        <Button
-          variant="secondary"
-          size="lg"
-          className="w-full text-lg h-16 rounded-2xl shadow-sm hover:shadow-md transition-all active:scale-95 bg-orange-100 text-orange-600 hover:bg-orange-200"
-          onClick={onStartQuiz}
-        >
-          <HelpCircle className="mr-2 h-6 w-6" /> 단어 퀴즈풀기
-        </Button>
+        <div className="grid grid-cols-2 gap-4">
+          <Button
+            variant="secondary"
+            size="lg"
+            className="w-full text-lg h-16 rounded-2xl shadow-sm hover:shadow-md transition-all active:scale-95 bg-orange-100 text-orange-600 hover:bg-orange-200"
+            onClick={onStartQuiz}
+          >
+            <HelpCircle className="mr-2 h-6 w-6" /> 단어 퀴즈
+          </Button>
+          <Button
+            variant="secondary"
+            size="lg"
+            className="w-full text-lg h-16 rounded-2xl shadow-sm hover:shadow-md transition-all active:scale-95 bg-purple-100 text-purple-600 hover:bg-purple-200"
+            onClick={onStartSpellingQuiz}
+          >
+            <GraduationCap className="mr-2 h-6 w-6" /> 스펠링 퀴즈
+          </Button>
+        </div>
         <Button
           variant="outline"
           size="lg"
