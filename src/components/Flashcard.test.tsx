@@ -65,4 +65,22 @@ describe('Flashcard Component', () => {
 
     expect(speakMock).toHaveBeenCalledTimes(2); // One from flip, one from button click
   });
+
+  it('uses the provided speechRate when speaking', () => {
+    const speakMock = vi.spyOn(window.speechSynthesis, 'speak');
+    const customRate = 1.2;
+
+    render(<Flashcard wordItem={mockWordItem} speechRate={customRate} />);
+
+    // Trigger flip to auto-play
+    const card =
+      screen.getByText(/클릭해서 뒤집기/i).parentElement?.parentElement;
+    if (card) {
+      fireEvent.click(card);
+    }
+
+    expect(speakMock).toHaveBeenCalled();
+    const utterance = (speakMock.mock.calls[0][0] as SpeechSynthesisUtterance);
+    expect(utterance.rate).toBe(customRate);
+  });
 });

@@ -6,9 +6,14 @@ import type { Word } from '../types';
 interface FlashcardProps {
   wordItem: Word;
   onMarkCorrectInReview?: (wordId: number) => void; // New optional prop for review mode
+  speechRate?: number;
 }
 
-const Flashcard = ({ wordItem, onMarkCorrectInReview }: FlashcardProps) => {
+const Flashcard = ({
+  wordItem,
+  onMarkCorrectInReview,
+  speechRate = 0.9,
+}: FlashcardProps) => {
   const [isFlipped, setIsFlipped] = useState(false);
 
   const playAudio = useCallback(
@@ -17,11 +22,11 @@ const Flashcard = ({ wordItem, onMarkCorrectInReview }: FlashcardProps) => {
       if ('speechSynthesis' in window) {
         const utterance = new SpeechSynthesisUtterance(wordItem.word);
         utterance.lang = 'en-US';
-        utterance.rate = 0.9; // Slightly slower for kids
+        utterance.rate = speechRate; // Use global speech rate
         window.speechSynthesis.speak(utterance);
       }
     },
-    [wordItem.word],
+    [wordItem.word, speechRate],
   );
 
   // Reset flip state when the wordItem changes (next/prev word)

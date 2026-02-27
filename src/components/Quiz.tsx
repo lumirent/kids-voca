@@ -8,9 +8,15 @@ interface QuizProps {
   wordItem: Word;
   allWords: Word[];
   onAnswer: (isCorrect: boolean, wordItem: Word) => void;
+  speechRate?: number;
 }
 
-const Quiz = ({ wordItem, allWords, onAnswer }: QuizProps) => {
+const Quiz = ({
+  wordItem,
+  allWords,
+  onAnswer,
+  speechRate = 0.9,
+}: QuizProps) => {
   const [options, setOptions] = useState<Word[]>([]);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [_isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -41,7 +47,7 @@ const Quiz = ({ wordItem, allWords, onAnswer }: QuizProps) => {
         correct ? 'Correct! Good job!' : 'Oops, try again next time.',
       );
       utterance.lang = 'en-US';
-      utterance.rate = 1.1;
+      utterance.rate = speechRate;
       window.speechSynthesis.speak(utterance);
     }
   };

@@ -9,6 +9,7 @@ import Statistics from './components/Statistics';
 import TopBar from './components/TopBar';
 import { useIncorrectWords } from './hooks/useIncorrectWords'; // New import
 import { useLearningStats } from './hooks/useLearningStats';
+import { useSpeechRate } from './hooks/useSpeechRate';
 import { useVocabulary } from './hooks/useVocabulary';
 import type { AppMode, Word } from './types';
 
@@ -19,6 +20,7 @@ function App() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [shuffleTrigger, setShuffleTrigger] = useState(0);
   const [quizScore, setQuizScore] = useState(0);
+  const [speechRate, setSpeechRate] = useSpeechRate();
 
   // Integrate hooks
   const { stats, recordAnswer, resetStats } = useLearningStats(mode);
@@ -148,11 +150,14 @@ function App() {
           <TopBar
             title={mode === 'learn' ? '단어 학습' : '오답 복습'}
             onHome={goHome}
+            speechRate={speechRate}
+            onSpeechRateChange={setSpeechRate}
           />
           <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 w-full max-w-2xl mx-auto gap-8">
             <Flashcard
               key={`${mode}-${currentIndex}-${shuffleTrigger}`}
               wordItem={currentDeck[currentIndex]}
+              speechRate={speechRate}
               onMarkCorrectInReview={
                 mode === 'review'
                   ? (wordId) => {
@@ -184,7 +189,12 @@ function App() {
 
       {!isLoading && mode === 'quiz' && (
         <div className="flex flex-col min-h-screen">
-          <TopBar title="단어 퀴즈" onHome={goHome} />
+          <TopBar
+            title="단어 퀴즈"
+            onHome={goHome}
+            speechRate={speechRate}
+            onSpeechRateChange={setSpeechRate}
+          />
           <main className="flex-1 flex flex-col items-center p-4 sm:p-6 w-full max-w-3xl mx-auto">
             <div className="w-full flex justify-between items-center mb-6 text-sm font-medium text-muted-foreground">
               <span>
@@ -195,6 +205,7 @@ function App() {
               wordItem={currentDeck[currentIndex]}
               allWords={allWords}
               onAnswer={handleQuizAnswer}
+              speechRate={speechRate}
             />
           </main>
         </div>
@@ -202,7 +213,12 @@ function App() {
 
       {!isLoading && mode === 'spelling-quiz' && (
         <div className="flex flex-col min-h-screen">
-          <TopBar title="스펠링 퀴즈" onHome={goHome} />
+          <TopBar
+            title="스펠링 퀴즈"
+            onHome={goHome}
+            speechRate={speechRate}
+            onSpeechRateChange={setSpeechRate}
+          />
           <main className="flex-1 flex flex-col items-center p-4 sm:p-6 w-full max-w-3xl mx-auto">
             <div className="w-full flex justify-between items-center mb-6 text-sm font-medium text-muted-foreground">
               <span>
@@ -212,6 +228,7 @@ function App() {
             <SpellingQuiz
               wordItem={currentDeck[currentIndex]}
               onAnswer={handleQuizAnswer}
+              speechRate={speechRate}
             />
           </main>
         </div>
@@ -219,7 +236,12 @@ function App() {
 
       {mode === 'quiz-result' && (
         <div className="flex flex-col min-h-screen">
-          <TopBar title="퀴즈 결과" onHome={goHome} />
+          <TopBar
+            title="퀴즈 결과"
+            onHome={goHome}
+            speechRate={speechRate}
+            onSpeechRateChange={setSpeechRate}
+          />
           <QuizResult
             score={quizScore}
             total={currentDeck.length}
@@ -232,6 +254,12 @@ function App() {
 
       {!isLoading && mode === 'stats' && (
         <div className="flex flex-col min-h-screen">
+          <TopBar
+            title="학습 통계"
+            onHome={goHome}
+            speechRate={speechRate}
+            onSpeechRateChange={setSpeechRate}
+          />
           <Statistics stats={stats} onReset={resetStats} onHome={goHome} />
         </div>
       )}

@@ -7,9 +7,14 @@ import type { Word } from '../types';
 interface SpellingQuizProps {
   wordItem: Word;
   onAnswer: (isCorrect: boolean, wordItem: Word) => void;
+  speechRate?: number;
 }
 
-const SpellingQuiz = ({ wordItem, onAnswer }: SpellingQuizProps) => {
+const SpellingQuiz = ({
+  wordItem,
+  onAnswer,
+  speechRate = 0.9,
+}: SpellingQuizProps) => {
   const [inputValues, setInputValues] = useState<Record<number, string>>({});
   const [hiddenIndices, setHiddenIndices] = useState<number[]>([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -21,10 +26,10 @@ const SpellingQuiz = ({ wordItem, onAnswer }: SpellingQuizProps) => {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(wordItem.word);
       utterance.lang = 'en-US';
-      utterance.rate = 0.9;
+      utterance.rate = speechRate;
       window.speechSynthesis.speak(utterance);
     }
-  }, [wordItem.word]);
+  }, [wordItem.word, speechRate]);
 
   useEffect(() => {
     if (!wordItem) return;
@@ -78,7 +83,7 @@ const SpellingQuiz = ({ wordItem, onAnswer }: SpellingQuizProps) => {
         correct ? 'Correct! Good job!' : `Oops! The word was ${wordItem.word}`,
       );
       utterance.lang = 'en-US';
-      utterance.rate = 1.1;
+      utterance.rate = speechRate;
       window.speechSynthesis.speak(utterance);
     }
   };
