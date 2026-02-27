@@ -109,42 +109,48 @@ const SpellingQuiz = ({ wordItem, onAnswer }: SpellingQuizProps) => {
         <p className="text-xl text-muted-foreground">{wordItem.meaning}</p>
       </div>
 
-            <form onSubmit={handleSubmit} className="w-full flex flex-col items-center gap-4">
-              <div className="relative w-full max-w-sm">
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={userInput}
-                  onChange={(e) => setUserInput(e.target.value)}
-                  disabled={isSubmitted}
-                  placeholder="여기에 스펠링을 입력하세요"
-                  className={`w-full h-16 text-2xl text-center rounded-2xl border-4 focus:outline-none transition-all ${
-                    isSubmitted
-                      ? isCorrect
-                        ? 'border-green-500 bg-green-50 text-green-700'
-                        : 'border-red-500 bg-red-50 text-red-700'
-                      : 'border-slate-200 focus:border-primary'
-                  }`}
-                />
-                {isSubmitted && (
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                    {isCorrect ? (
-                      <CheckCircle2 className="w-8 h-8 text-green-500 animate-bounce" />
-                    ) : (
-                      <XCircle className="w-8 h-8 text-red-500 animate-pulse" />
-                    )}
-                  </div>
-                )}
-              </div>
-      
-              {isSubmitted && !isCorrect && (
-                <div className="text-xl font-bold text-red-600 animate-in fade-in slide-in-from-top-2">
-                  정답은: <span className="text-2xl underline decoration-double">{wordItem.word}</span> 예요!
-                </div>
+      <form
+        onSubmit={handleSubmit}
+        className="w-full flex flex-col items-center gap-4"
+      >
+        <div className="relative w-full max-w-sm">
+          <input
+            ref={inputRef}
+            type="text"
+            value={userInput}
+            onChange={(e) => setUserInput(e.target.value)}
+            disabled={isSubmitted}
+            placeholder="여기에 스펠링을 입력하세요"
+            className={`w-full h-16 text-2xl text-center rounded-2xl border-4 focus:outline-none transition-all ${
+              isSubmitted
+                ? isCorrect
+                  ? 'border-green-500 bg-green-50 text-green-700'
+                  : 'border-red-500 bg-red-50 text-red-700'
+                : 'border-slate-200 focus:border-primary'
+            }`}
+          />
+          {isSubmitted && (
+            <div className="absolute right-4 top-1/2 -translate-y-1/2">
+              {isCorrect ? (
+                <CheckCircle2 className="w-8 h-8 text-green-500 animate-bounce" />
+              ) : (
+                <XCircle className="w-8 h-8 text-red-500 animate-pulse" />
               )}
-      
-              <Button
-      
+            </div>
+          )}
+        </div>
+
+        {isSubmitted && !isCorrect && (
+          <div className="text-xl font-bold text-red-600 animate-in fade-in slide-in-from-top-2">
+            정답은:{' '}
+            <span className="text-2xl underline decoration-double">
+              {wordItem.word}
+            </span>{' '}
+            예요!
+          </div>
+        )}
+
+        <Button
           type="submit"
           size="lg"
           disabled={isSubmitted || !userInput.trim()}

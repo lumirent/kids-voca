@@ -157,7 +157,16 @@ function App() {
                 mode === 'review'
                   ? (wordId) => {
                       removeIncorrectWord(wordId);
-                      handleNext();
+                      if (currentIndex < currentDeck.length - 1) {
+                        handleNext();
+                      } else {
+                        // 마지막 카드인 경우: 남은 오답이 있으면 처음으로, 없으면 홈으로
+                        if (incorrectWords.length > 1) {
+                          setCurrentIndex(0);
+                        } else {
+                          goHome();
+                        }
+                      }
                     }
                   : undefined
               }
