@@ -80,7 +80,7 @@ describe('Flashcard Component', () => {
     }
 
     expect(speakMock).toHaveBeenCalled();
-    const utterance = (speakMock.mock.calls[0][0] as SpeechSynthesisUtterance);
+    const utterance = speakMock.mock.calls[0][0] as SpeechSynthesisUtterance;
     expect(utterance.rate).toBe(customRate);
   });
 });

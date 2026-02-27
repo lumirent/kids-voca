@@ -205,6 +205,10 @@ const SpellingQuiz = ({
                       }
                       onKeyDown={(e) => handleKeyDown(globalIdx, e)}
                       disabled={isSubmitted}
+                      autoCapitalize="none"
+                      autoComplete="off"
+                      autoCorrect="off"
+                      spellCheck="false"
                       className={`w-10 h-12 sm:w-14 sm:h-16 text-3xl sm:text-4xl text-center font-mono font-bold rounded-xl border-b-4 focus:outline-none transition-all ${
                         isSubmitted
                           ? isCorrect
