@@ -6,14 +6,16 @@ Kids Voca App is an interactive educational application designed to help childre
 
 - **Flashcard Learning**: Browse through vocabulary words with associated images and meanings.
 - **Interactive Quiz**: Test knowledge with multiple-choice questions.
+- **Spelling Quiz**: Practice typing the English words to reinforce spelling.
 - **Review Mode**: Focus on words that were missed during quiz sessions.
+- **Statistics**: Track your learning progress and performance over time.
 - **Audio Feedback**: Uses the browser's `SpeechSynthesis` API for word pronunciation and quiz feedback.
 - **Supabase Integration**: Real-time data fetching and image storage.
 - **Progress Tracking**: Visual progress indicators for learning sessions.
 
 ## 🛠 Tech Stack
 
-- **Frontend**: React 19, Vite 5, TypeScript
+- **Frontend**: React 19, Vite 7, TypeScript
 - **Styling**: Tailwind CSS 4, Lucide React (Icons), Radix UI
 - **Backend/Database**: Supabase (PostgreSQL + Storage)
 - **Linting/Formatting**: Biome
@@ -93,15 +95,23 @@ Kids Voca App is an interactive educational application designed to help childre
 ├── src/
 │   ├── components/       # UI Components (Flashcard, Quiz, etc.)
 │   │   └── ui/           # Reusable Radix/Shadcn UI components
-│   ├── hooks/            # Custom React hooks
-│   ├── data/             # Vocabulary data (CSV, TS, JSON)
-│   ├── lib/              # Utility functions
+│   ├── hooks/            # Custom React hooks (vocabulary, stats, etc.)
+│   ├── lib/              # Utility functions (utils.ts)
 │   ├── types/            # TypeScript definitions
 │   ├── supabase.ts       # Supabase client config
-│   └── App.tsx           # Main application entry
-├── scripts/              # Utility scripts (data upload, etc.)
-└── tests/                # Test setup and configuration
+│   ├── App.tsx           # Main application entry
+│   └── main.tsx          # React application root
+├── scripts/              # Utility scripts (e.g., upload_json.js)
+├── data/                 # Raw data files (JSON, CSV, concept)
+└── .test/                # Test setup and configuration
 ```
+
+## 🛠 Development Conventions
+
+- **Functional Components**: Use React Functional Components with Hooks.
+- **Tailwind CSS**: Follow utility-first patterns for styling.
+- **Biome**: Strictly enforced linting and formatting. Run `pnpm lint:fix` before committing.
+- **Data Flow**: Vocabulary data is fetched from Supabase on application load.
 
 ## 📜 License
 
