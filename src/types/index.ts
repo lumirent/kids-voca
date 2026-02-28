@@ -12,4 +12,5 @@ export type AppMode =
   | 'spelling-quiz'
   | 'review'
   | 'quiz-result'
-  | 'stats';
+  | 'stats'
+  | 'admin';

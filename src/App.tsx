@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import Admin from './components/Admin';
 import DeckControls from './components/DeckControls';
 import Flashcard from './components/Flashcard';
 import Home from './components/Home';
@@ -7,7 +8,7 @@ import QuizResult from './components/QuizResult';
 import SpellingQuiz from './components/SpellingQuiz';
 import Statistics from './components/Statistics';
 import TopBar from './components/TopBar';
-import { useIncorrectWords } from './hooks/useIncorrectWords'; // New import
+import { useIncorrectWords } from './hooks/useIncorrectWords';
 import { useLearningStats } from './hooks/useLearningStats';
 import { useSpeechRate } from './hooks/useSpeechRate';
 import { useStudyProgress } from './hooks/useStudyProgress';
@@ -110,6 +111,10 @@ function App() {
     setMode('stats');
   };
 
+  const startAdminMode = () => {
+    setMode('admin');
+  };
+
   const goHome = () => {
     setMode('home');
   };
@@ -188,6 +193,7 @@ function App() {
           onStartSpellingQuiz={startSpellingQuizMode}
           onStartReview={startReviewMode}
           onStartStats={startStatsMode} // New prop
+          onStartAdmin={startAdminMode}
           wrongAnswersCount={incorrectWords.length}
         />
       )}
@@ -310,6 +316,8 @@ function App() {
           <Statistics stats={stats} onReset={resetStats} onHome={goHome} />
         </div>
       )}
+
+      {!isLoading && mode === 'admin' && <Admin onBack={goHome} />}
     </div>
   );
 }

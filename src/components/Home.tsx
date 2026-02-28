@@ -4,6 +4,7 @@ import {
   GraduationCap,
   HelpCircle,
   RotateCcw,
+  Settings,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -12,7 +13,8 @@ interface HomeProps {
   onStartQuiz: () => void;
   onStartSpellingQuiz: () => void;
   onStartReview: () => void;
-  onStartStats: () => void; // New prop
+  onStartStats: () => void;
+  onStartAdmin: () => void;
   wrongAnswersCount: number;
 }
 
@@ -22,10 +24,21 @@ const Home = ({
   onStartSpellingQuiz,
   onStartReview,
   onStartStats, // New prop
+  onStartAdmin,
   wrongAnswersCount,
 }: HomeProps) => {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] text-center px-4">
+    <div className="flex flex-col items-center justify-center min-h-[80vh] text-center px-4 relative">
+      <div className="absolute top-4 right-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onStartAdmin}
+          className="text-slate-400 hover:text-slate-600"
+        >
+          <Settings size={24} />
+        </Button>
+      </div>
       <div className="bg-primary/10 p-6 rounded-full mb-6">
         <GraduationCap size={80} className="text-primary" />
       </div>
