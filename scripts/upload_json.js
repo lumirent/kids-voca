@@ -20,20 +20,38 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 async function uploadData() {
   try {
-    const jsonDir = path.resolve(process.cwd(), 'src', 'data', 'json');
+    const targetPath = process.argv[2] || 'data/json';
+    const jsonDir = path.resolve(process.cwd(), targetPath);
     console.log(`Reading JSON files from ${jsonDir}...`);
 
     if (!fs.existsSync(jsonDir)) {
       throw new Error(`Directory not found: ${jsonDir}`);
     }
 
-    const files = fs
-      .readdirSync(jsonDir)
-      .filter((file) => file.endsWith('.json'));
+    const getAllJsonFiles = (dir) => {
+      let results = [];
+      const list = fs.readdirSync(dir);
+      for (const file of list) {
+        const filePath = path.join(dir, file);
+        const stat = fs.statSync(filePath);
+        if (stat?.isDirectory()) {
+          results = results.concat(getAllJsonFiles(filePath));
+        } else if (file.endsWith('.json')) {
+          results.push(filePath);
+        }
+      }
+      return results;
+    };
+
+    const files = getAllJsonFiles(jsonDir);
+    if (files.length === 0) {
+      console.log('No JSON files found in the specified directory.');
+      return;
+    }
     console.log(`Found ${files.length} JSON files to process.`);
 
-    for (const file of files) {
-      const jsonPath = path.join(jsonDir, file);
+    for (const jsonPath of files) {
+      const file = path.relative(jsonDir, jsonPath);
       console.log(`\n--- Processing file: ${file} ---`);
       const rawData = fs.readFileSync(jsonPath, 'utf-8');
       const vocabData = JSON.parse(rawData);

@@ -67,6 +67,23 @@ Kids Voca App is an interactive educational application designed to help childre
   pnpm preview
   ```
 
+### 📦 Data Management
+
+- Upload vocabulary data from a JSON directory to Supabase (default: `data/json`):
+  ```bash
+  pnpm data:upload
+  # Or specify a custom folder
+  pnpm data:upload data/json/chapter1
+  ```
+  *(Note: This script requires `SUPABASE_SERVICE_ROLE_KEY` in your `.env.local` to handle image uploads and database updates.)*
+
+#### Duplicate Data Handling (Upsert)
+The upload script uses an **Upsert (Update or Insert)** strategy to prevent duplicate entries:
+- **Images (Storage)**: Uses the `upsert: true` option. If an image with the same filename already exists in the `flashcards` bucket, it will be overwritten with the new one.
+- **Words (Database)**: Before inserting, the script checks if the English `word` already exists in the `words` table:
+    - If it **exists**, the meaning and image URL are **updated** to the latest values.
+    - If it **does not exist**, a **new record** is inserted.
+
 ## 📊 Data Structure
 
 ### Supabase 'words' Table
