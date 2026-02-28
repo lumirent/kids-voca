@@ -13,9 +13,9 @@ import * as pdfjsLib from 'pdfjs-dist';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.mjs?url';
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
-import { toast } from 'sonner';
 
 // Initialize PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
@@ -209,81 +209,90 @@ const Admin: React.FC<AdminProps> = ({ onBack }) => {
     ],
   );
 
-    // Drag handlers
-    const handleDrag = useCallback(
-      (e: MouseEvent | TouchEvent) => {
-        const d = dragRef.current;
-        if (!d.isDragging || d.activeIdx === null || !currentImgSource) return;
-  
-        const clientX = e instanceof MouseEvent ? e.clientX : e.touches[0].clientX;
-        const clientY = e instanceof MouseEvent ? e.clientY : e.touches[0].clientY;
-  
-        const deltaX = clientX - d.startX;
-        const deltaY = clientY - d.startY;
-  
-        const gSettings = {
-          hRatio: globalHRatio,
-          scale: globalScale,
-          vOffset: globalVOffset,
-          hOffset: globalHOffset,
-        };
-  
-        // Update values in the ref-held settings (avoiding frequent state triggers)
-        const targetIdx = d.activeIdx!;
-        const item = { ...cardSettings[targetIdx] };
-        item.hOffset = d.initialHOffset - deltaX;
-        item.vOffset = d.initialVOffset - deltaY;
-  
-        // Update the actual setting object for processing
-        const tempSettings = [...cardSettings];
-        tempSettings[targetIdx] = item;
-  
-        // Re-process image data for this single card manually
-        const processedItem = processSingleCard(
-          targetIdx,
-          tempSettings,
-          currentImgSource,
-          gSettings,
-        );
-  
-        // Directly update the image src in the DOM for smooth feedback
-        const imgEl = document.getElementById(`img-${targetIdx}`) as HTMLImageElement;
-        if (imgEl) {
-          imgEl.src = processedItem.imageData;
-        }
-  
-        // Keep track of the latest processed item to save on stop
-        d.lastProcessedItem = processedItem;
-      },
-      [currentImgSource, globalHRatio, globalScale, globalVOffset, globalHOffset, processSingleCard, cardSettings],
-    );
-  
-    const stopDrag = useCallback(() => {
+  // Drag handlers
+  const handleDrag = useCallback(
+    (e: MouseEvent | TouchEvent) => {
       const d = dragRef.current;
-      if (d.isDragging && d.activeIdx !== null && d.lastProcessedItem) {
-        // Finalize the state update once at the end
-        const targetIdx = d.activeIdx;
-        const finalItem = d.lastProcessedItem;
-        
-        setCardSettings((prev) => {
-          const next = [...prev];
-          next[targetIdx] = finalItem;
-          return next;
-        });
+      if (!d.isDragging || d.activeIdx === null || !currentImgSource) return;
+
+      const clientX =
+        e instanceof MouseEvent ? e.clientX : e.touches[0].clientX;
+      const clientY =
+        e instanceof MouseEvent ? e.clientY : e.touches[0].clientY;
+
+      const deltaX = clientX - d.startX;
+      const deltaY = clientY - d.startY;
+
+      const gSettings = {
+        hRatio: globalHRatio,
+        scale: globalScale,
+        vOffset: globalVOffset,
+        hOffset: globalHOffset,
+      };
+
+      // Update values in the ref-held settings (avoiding frequent state triggers)
+      const targetIdx = d.activeIdx!;
+      const item = { ...cardSettings[targetIdx] };
+      item.hOffset = d.initialHOffset - deltaX;
+      item.vOffset = d.initialVOffset - deltaY;
+
+      // Update the actual setting object for processing
+      const tempSettings = [...cardSettings];
+      tempSettings[targetIdx] = item;
+
+      // Re-process image data for this single card manually
+      const processedItem = processSingleCard(
+        targetIdx,
+        tempSettings,
+        currentImgSource,
+        gSettings,
+      );
+
+      // Directly update the image src in the DOM for smooth feedback
+      const imgEl = document.getElementById(
+        `img-${targetIdx}`,
+      ) as HTMLImageElement;
+      if (imgEl) {
+        imgEl.src = processedItem.imageData;
       }
-  
-      d.isDragging = false;
-      d.activeIdx = null;
-      d.lastProcessedItem = null;
-      window.removeEventListener('mousemove', handleDrag);
-      window.removeEventListener('mouseup', stopDrag);
-      window.removeEventListener('touchmove', handleDrag);
-      window.removeEventListener('touchend', stopDrag);
-    }, [handleDrag]);
-    const initDrag = (
-    e: React.MouseEvent | React.TouchEvent,
-    idx: number,
-  ) => {
+
+      // Keep track of the latest processed item to save on stop
+      d.lastProcessedItem = processedItem;
+    },
+    [
+      currentImgSource,
+      globalHRatio,
+      globalScale,
+      globalVOffset,
+      globalHOffset,
+      processSingleCard,
+      cardSettings,
+    ],
+  );
+
+  const stopDrag = useCallback(() => {
+    const d = dragRef.current;
+    if (d.isDragging && d.activeIdx !== null && d.lastProcessedItem) {
+      // Finalize the state update once at the end
+      const targetIdx = d.activeIdx;
+      const finalItem = d.lastProcessedItem;
+
+      setCardSettings((prev) => {
+        const next = [...prev];
+        next[targetIdx] = finalItem;
+        return next;
+      });
+    }
+
+    d.isDragging = false;
+    d.activeIdx = null;
+    d.lastProcessedItem = null;
+    window.removeEventListener('mousemove', handleDrag);
+    window.removeEventListener('mouseup', stopDrag);
+    window.removeEventListener('touchmove', handleDrag);
+    window.removeEventListener('touchend', stopDrag);
+  }, [handleDrag]);
+  const initDrag = (e: React.MouseEvent | React.TouchEvent, idx: number) => {
     const item = cardSettings[idx];
     const clientX = 'clientX' in e ? e.clientX : e.touches[0].clientX;
     const clientY = 'clientY' in e ? e.clientY : e.touches[0].clientY;

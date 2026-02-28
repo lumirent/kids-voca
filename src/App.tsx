@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Toaster, toast } from 'sonner';
 import Admin from './components/Admin';
 import DeckControls from './components/DeckControls';
 import Flashcard from './components/Flashcard';
@@ -8,18 +9,18 @@ import QuizResult from './components/QuizResult';
 import SpellingQuiz from './components/SpellingQuiz';
 import Statistics from './components/Statistics';
 import TopBar from './components/TopBar';
+import { ConfirmDialog } from './components/ui/confirm-dialog';
 import { useIncorrectWords } from './hooks/useIncorrectWords';
 import { useLearningStats } from './hooks/useLearningStats';
 import { useSpeechRate } from './hooks/useSpeechRate';
 import { useStudyProgress } from './hooks/useStudyProgress';
 import { useVocabulary } from './hooks/useVocabulary';
-import type { AppMode, Word } from './types';
-import { Toaster, toast } from 'sonner';
-import { ConfirmDialog } from './components/ui/confirm-dialog';
+import type { AppMode, LearningMode, Word } from './types';
 
 function App() {
   const { allWords, isLoading, error } = useVocabulary();
   const [mode, setMode] = useState<AppMode>('home');
+  const [learningMode, setLearningMode] = useState<LearningMode>('image-word');
   const [currentDeck, setCurrentDeck] = useState<Word[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [shuffleTrigger, setShuffleTrigger] = useState(0);
@@ -131,7 +132,8 @@ function App() {
     setConfirmDialog({
       isOpen: true,
       title: '진행 상황 초기화',
-      description: '모든 학습 진행 상황을 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
+      description:
+        '모든 학습 진행 상황을 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
       variant: 'destructive',
       onConfirm: () => {
         clearProgress('learn');
@@ -144,7 +146,8 @@ function App() {
   };
 
   // --- Navigation & State Reset ---
-  const startLearnMode = () => {
+  const startLearnMode = (selectedLearningMode: LearningMode) => {
+    setLearningMode(selectedLearningMode);
     startMode('learn', allWords);
   };
 
@@ -250,6 +253,8 @@ function App() {
           onStartAdmin={startAdminMode}
           onResetProgress={clearAllProgressData}
           wrongAnswersCount={incorrectWords.length}
+          learningMode={learningMode}
+          onLearningModeChange={setLearningMode}
         />
       )}
 
@@ -265,6 +270,7 @@ function App() {
             <Flashcard
               key={`${mode}-${currentIndex}-${shuffleTrigger}`}
               wordItem={currentDeck[currentIndex]}
+              learningMode={learningMode}
               speechRate={speechRate}
               onMarkCorrectInReview={
                 mode === 'review'

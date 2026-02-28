@@ -1,16 +1,18 @@
 import { Volume2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
-import type { Word } from '../types';
+import type { LearningMode, Word } from '../types';
 
 interface FlashcardProps {
   wordItem: Word;
+  learningMode?: LearningMode; // Optional for backward compatibility, defaults to 'image-word'
   onMarkCorrectInReview?: (wordId: number) => void; // New optional prop for review mode
   speechRate?: number;
 }
 
 const Flashcard = ({
   wordItem,
+  learningMode = 'image-word',
   onMarkCorrectInReview,
   speechRate = 0.9,
 }: FlashcardProps) => {
@@ -49,6 +51,83 @@ const Flashcard = ({
 
   if (!wordItem) return null;
 
+  // Render front content based on learning mode
+  const renderFrontContent = () => {
+    switch (learningMode) {
+      case 'word-meaning':
+        return (
+          <div className="flex flex-col items-center justify-center h-full gap-6">
+            <h1 className="text-5xl sm:text-6xl font-black text-slate-800 tracking-tight text-center">
+              {wordItem.word}
+            </h1>
+            <div
+              className="p-3 rounded-full bg-slate-100 text-primary hover:bg-slate-200 transition-colors cursor-pointer"
+              onClick={playAudio}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') playAudio(e);
+              }}
+            >
+              <Volume2 size={32} />
+            </div>
+          </div>
+        );
+      case 'meaning-word':
+        return (
+          <div className="flex flex-col items-center justify-center h-full gap-4">
+            <h2 className="text-4xl sm:text-5xl font-bold text-primary text-center">
+              {wordItem.meaning}
+            </h2>
+          </div>
+        );
+      default:
+        return (
+          <div className="relative w-full h-full flex-1 flex items-center justify-center mb-6">
+            <img
+              src={wordItem.imageUrl}
+              alt="word illustration"
+              className="w-full h-full object-contain drop-shadow-md"
+              draggable="false"
+            />
+          </div>
+        );
+    }
+  };
+
+  // Render back content based on learning mode
+  const renderBackContent = () => {
+    switch (learningMode) {
+      case 'word-meaning':
+        return (
+          <div className="text-center space-y-4">
+            <h2 className="text-4xl sm:text-5xl font-bold text-primary">
+              {wordItem.meaning}
+            </h2>
+          </div>
+        );
+      case 'meaning-word':
+        return (
+          <div className="text-center space-y-4">
+            <h1 className="text-5xl sm:text-6xl font-black text-slate-800 tracking-tight">
+              {wordItem.word}
+            </h1>
+          </div>
+        );
+      default:
+        return (
+          <div className="text-center space-y-4">
+            <h1 className="text-5xl sm:text-6xl font-black text-slate-800 tracking-tight">
+              {wordItem.word}
+            </h1>
+            <h2 className="text-2xl sm:text-3xl font-bold text-primary">
+              {wordItem.meaning}
+            </h2>
+          </div>
+        );
+    }
+  };
+
   return (
     <button
       type="button"
@@ -58,24 +137,16 @@ const Flashcard = ({
       <div
         className={`relative w-full aspect-4/5 sm:aspect-square transition-transform duration-700 preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}
       >
-        {/* Front of the card (Image) */}
+        {/* Front of the card */}
         <Card className="absolute w-full h-full backface-hidden overflow-hidden border-2 shadow-lg flex flex-col items-center justify-center p-6 bg-white rounded-3xl">
-          <div className="relative w-full h-full flex-1 flex items-center justify-center mb-6">
-            <img
-              src={wordItem.imageUrl}
-              alt="word illustration"
-              className="w-full h-full object-contain drop-shadow-md"
-              draggable="false"
-            />
-          </div>
+          {renderFrontContent()}
           <div className="text-sm font-medium text-muted-foreground animate-bounce mt-auto bg-slate-100 px-4 py-2 rounded-full">
             클릭해서 뒤집기 👆
           </div>
         </Card>
 
-        {/* Back of the card (Text & Audio) */}
+        {/* Back of the card */}
         <Card className="absolute w-full h-full backface-hidden rotate-y-180 border-2 shadow-lg flex flex-col items-center justify-center p-6 bg-linear-to-br from-blue-50 to-indigo-100 rounded-3xl">
-          {/* biome-ignore lint/a11y/useSemanticElements: Using div with role="button" inside another button is a compromise for this card design */}
           <div
             className="mb-8 p-5 rounded-full bg-white shadow-md hover:shadow-lg transition-transform hover:scale-110 active:scale-95 text-primary"
             onClick={playAudio}
@@ -92,14 +163,8 @@ const Flashcard = ({
             <Volume2 size={56} strokeWidth={2.5} />
           </div>
 
-          <div className="text-center space-y-4">
-            <h1 className="text-5xl sm:text-6xl font-black text-slate-800 tracking-tight">
-              {wordItem.word}
-            </h1>
-            <h2 className="text-2xl sm:text-3xl font-bold text-primary">
-              {wordItem.meaning}
-            </h2>
-          </div>
+          {renderBackContent()}
+
           {onMarkCorrectInReview && (
             <button
               type="button"

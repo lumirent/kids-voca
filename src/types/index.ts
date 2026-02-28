@@ -14,3 +14,5 @@ export type AppMode =
   | 'quiz-result'
   | 'stats'
   | 'admin';
+
+export type LearningMode = 'image-word' | 'word-meaning' | 'meaning-word';

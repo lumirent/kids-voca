@@ -1,10 +1,10 @@
 import { ArrowLeft, RefreshCw } from 'lucide-react';
 import type React from 'react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import type { LearningStats } from '../hooks/useLearningStats';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { toast } from 'sonner';
-import { useState } from 'react';
 import { ConfirmDialog } from './ui/confirm-dialog';
 
 interface StatisticsProps {

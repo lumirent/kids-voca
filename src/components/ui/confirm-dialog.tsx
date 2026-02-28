@@ -1,4 +1,5 @@
-import React from 'react';
+import type React from 'react';
+import { Button } from './button';
 import {
   Dialog,
   DialogContent,
@@ -7,7 +8,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from './dialog';
-import { Button } from './button';
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -35,9 +35,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription className="pt-2">
-            {description}
-          </DialogDescription>
+          <DialogDescription className="pt-2">{description}</DialogDescription>
         </DialogHeader>
         <DialogFooter className="mt-4 gap-2 sm:gap-0">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
