@@ -14,6 +14,8 @@ import { useSpeechRate } from './hooks/useSpeechRate';
 import { useStudyProgress } from './hooks/useStudyProgress';
 import { useVocabulary } from './hooks/useVocabulary';
 import type { AppMode, Word } from './types';
+import { Toaster, toast } from 'sonner';
+import { ConfirmDialog } from './components/ui/confirm-dialog';
 
 function App() {
   const { allWords, isLoading, error } = useVocabulary();
@@ -23,6 +25,20 @@ function App() {
   const [shuffleTrigger, setShuffleTrigger] = useState(0);
   const [quizScore, setQuizScore] = useState(0);
   const [speechRate, setSpeechRate] = useSpeechRate();
+
+  // Dialog states
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    onConfirm: () => void;
+    variant?: 'default' | 'destructive';
+  }>({
+    isOpen: false,
+    title: '',
+    description: '',
+    onConfirm: () => {},
+  });
 
   // Integrate hooks
   const { stats, recordAnswer, resetStats } = useLearningStats(mode);
@@ -49,17 +65,20 @@ function App() {
     }
   }, [mode, currentIndex, currentDeck, quizScore, saveProgress]);
 
-  if (error) {
-    alert(
-      '단어 데이터를 불러오지 못했습니다. 데이터베이스 설정을 확인해주세요.',
-    );
-  }
+  useEffect(() => {
+    if (error) {
+      toast.error(
+        '단어 데이터를 불러오지 못했습니다. 데이터베이스 설정을 확인해주세요.',
+      );
+    }
+  }, [error]);
 
   // Helper to start or resume a mode
   const startMode = (targetMode: AppMode, baseWords: Word[]) => {
     if (baseWords.length === 0) {
       if (targetMode === 'review') return;
-      return alert('단어 데이터가 없습니다.');
+      toast.warning('단어 데이터가 없습니다.');
+      return;
     }
 
     const saved = getProgress(targetMode);
@@ -68,6 +87,24 @@ function App() {
       saved.deckIds.length > 0 &&
       saved.currentIndex < saved.deckIds.length
     ) {
+      // Check for mismatch in word count (except for review mode)
+      if (targetMode !== 'review' && baseWords.length > saved.deckIds.length) {
+        setConfirmDialog({
+          isOpen: true,
+          title: '새로운 단어 추가됨',
+          description: `새로운 단어가 추가되었습니다! (현재: ${saved.deckIds.length}개 -> 전체: ${baseWords.length}개)\n처음부터 다시 시작할까요? (취소를 누르면 이전 기록을 이어서 합니다)`,
+          onConfirm: () => {
+            clearProgress(targetMode);
+            // Start fresh
+            setCurrentDeck([...baseWords].sort(() => 0.5 - Math.random()));
+            setCurrentIndex(0);
+            setQuizScore(0);
+            setMode(targetMode);
+          },
+        });
+        return;
+      }
+
       // Try to reconstruct the deck from IDs. We must ensure all words still exist.
       const reconstructedDeck = saved.deckIds
         .map((id) => allWords.find((w) => w.id === id))
@@ -88,6 +125,22 @@ function App() {
     setCurrentIndex(0);
     setQuizScore(0);
     setMode(targetMode);
+  };
+
+  const clearAllProgressData = () => {
+    setConfirmDialog({
+      isOpen: true,
+      title: '진행 상황 초기화',
+      description: '모든 학습 진행 상황을 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
+      variant: 'destructive',
+      onConfirm: () => {
+        clearProgress('learn');
+        clearProgress('quiz');
+        clearProgress('spelling-quiz');
+        clearProgress('review');
+        toast.success('초기화되었습니다.');
+      },
+    });
   };
 
   // --- Navigation & State Reset ---
@@ -176,6 +229,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-primary/20">
+      <Toaster position="top-center" richColors />
       {isLoading && (
         <div className="flex flex-col items-center justify-center min-h-screen">
           <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-primary border-opacity-50 border-solid mb-4" />
@@ -194,6 +248,7 @@ function App() {
           onStartReview={startReviewMode}
           onStartStats={startStatsMode} // New prop
           onStartAdmin={startAdminMode}
+          onResetProgress={clearAllProgressData}
           wrongAnswersCount={incorrectWords.length}
         />
       )}
@@ -318,6 +373,17 @@ function App() {
       )}
 
       {!isLoading && mode === 'admin' && <Admin onBack={goHome} />}
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onOpenChange={(open) =>
+          setConfirmDialog((prev) => ({ ...prev, isOpen: open }))
+        }
+        title={confirmDialog.title}
+        description={confirmDialog.description}
+        onConfirm={confirmDialog.onConfirm}
+        variant={confirmDialog.variant}
+      />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import {
   HelpCircle,
   RotateCcw,
   Settings,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -15,6 +16,7 @@ interface HomeProps {
   onStartReview: () => void;
   onStartStats: () => void;
   onStartAdmin: () => void;
+  onResetProgress: () => void;
   wrongAnswersCount: number;
 }
 
@@ -25,11 +27,21 @@ const Home = ({
   onStartReview,
   onStartStats, // New prop
   onStartAdmin,
+  onResetProgress,
   wrongAnswersCount,
 }: HomeProps) => {
   return (
     <div className="flex flex-col items-center justify-center min-h-[80vh] text-center px-4 relative">
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 flex gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onResetProgress}
+          className="text-slate-400 hover:text-red-500"
+          title="진행 상황 초기화"
+        >
+          <Trash2 size={24} />
+        </Button>
         <Button
           variant="ghost"
           size="icon"

@@ -18,14 +18,16 @@ export const useVocabulary = () => {
 
       if (supabaseError) throw supabaseError;
 
-      if (data && data.length > 0) {
-        const formattedData: Word[] = data.map((item) => ({
-          id: item.id,
-          word: item.word,
-          meaning: item.meaning,
-          imageUrl: item.image_url || item.imageUrl,
-        }));
-        setAllWords(formattedData);
+      if (data) {
+        if (data.length > 0) {
+          const formattedData: Word[] = data.map((item) => ({
+            id: item.id,
+            word: item.word,
+            meaning: item.meaning,
+            imageUrl: item.image_url || item.imageUrl,
+          }));
+          setAllWords(formattedData);
+        }
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';

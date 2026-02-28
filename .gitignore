@@ -49,6 +49,9 @@ docs/
 .codeium/
 .continue/
 .gemini/
+GEMINI.md
+CLAUDE.md
+AGENT.md
 
 # Testing
 coverage/

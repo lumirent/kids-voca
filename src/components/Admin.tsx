@@ -15,6 +15,7 @@ import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
+import { toast } from 'sonner';
 
 // Initialize PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
@@ -372,6 +373,7 @@ const Admin: React.FC<AdminProps> = ({ onBack }) => {
     a.href = URL.createObjectURL(blob);
     a.download = `vocab_export_p${pageNum}_${Date.now()}.json`;
     a.click();
+    toast.success('JSON 파일이 다운로드되었습니다.');
   };
 
   const downloadCsv = () => {
@@ -384,6 +386,7 @@ const Admin: React.FC<AdminProps> = ({ onBack }) => {
     a.href = URL.createObjectURL(blob);
     a.download = `vocab_sheet_p${pageNum}_${Date.now()}.csv`;
     a.click();
+    toast.success('CSV 파일이 다운로드되었습니다.');
   };
 
   const handleIndividualUpdate = (

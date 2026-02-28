@@ -3,6 +3,9 @@ import type React from 'react';
 import type { LearningStats } from '../hooks/useLearningStats';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { toast } from 'sonner';
+import { useState } from 'react';
+import { ConfirmDialog } from './ui/confirm-dialog';
 
 interface StatisticsProps {
   stats: LearningStats;
@@ -11,6 +14,8 @@ interface StatisticsProps {
 }
 
 const Statistics: React.FC<StatisticsProps> = ({ stats, onReset, onHome }) => {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -40,6 +45,10 @@ const Statistics: React.FC<StatisticsProps> = ({ stats, onReset, onHome }) => {
         day: 'numeric',
       })
     : 'N/A';
+
+  const handleReset = () => {
+    setConfirmOpen(true);
+  };
 
   return (
     <div className="flex flex-col min-h-screen p-4 sm:p-6 w-full max-w-3xl mx-auto">
@@ -170,12 +179,24 @@ const Statistics: React.FC<StatisticsProps> = ({ stats, onReset, onHome }) => {
       <div className="mt-8 flex justify-end">
         <Button
           variant="destructive"
-          onClick={onReset}
+          onClick={handleReset}
           className="flex items-center gap-2"
         >
           <RefreshCw className="h-4 w-4" /> 통계 초기화
         </Button>
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="통계 초기화"
+        description="모든 학습 통계를 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+        variant="destructive"
+        onConfirm={() => {
+          onReset();
+          toast.success('통계가 초기화되었습니다.');
+        }}
+      />
     </div>
   );
 };
